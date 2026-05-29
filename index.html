@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Threshold">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Threshold</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #1a1a24;
+  --bg4: #22222e;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f5;
+  --text2: #9090a8;
+  --text3: #5a5a70;
+  --teal: #1db88a;
+  --teal2: #0d8a63;
+  --teal-bg: rgba(29,184,138,0.12);
+  --teal-border: rgba(29,184,138,0.25);
+  --amber: #e8a030;
+  --amber-bg: rgba(232,160,48,0.12);
+  --amber-border: rgba(232,160,48,0.25);
+  --red: #e05555;
+  --red-bg: rgba(224,85,85,0.12);
+  --red-border: rgba(224,85,85,0.25);
+  --purple: #8b7cf8;
+  --purple-bg: rgba(139,124,248,0.12);
+  --purple-border: rgba(139,124,248,0.25);
+  --blue: #5b9ef8;
+  --blue-bg: rgba(91,158,248,0.12);
+  --blue-border: rgba(91,158,248,0.25);
+  --font: 'DM Sans', sans-serif;
+  --font-serif: 'DM Serif Display', serif;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: calc(20px + var(--safe-bottom));
+  animation: fadeIn 0.3s ease;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+@keyframes countPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+@keyframes shimmer { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+
+.header {
+  padding: 56px 24px 20px;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--text3);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.content { padding: 0 24px; flex: 1; }
+
+.big-question {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  line-height: 1.2;
+  color: var(--text);
+  margin-bottom: 10px;
+  font-weight: 400;
+}
+
+.big-sub {
+  font-size: 14px;
+  color: var(--text3);
+  margin-bottom: 36px;
+  line-height: 1.5;
+}
+
+.state-btn {
+  width: 100%;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  background: var(--bg2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.state-btn:active { transform: scale(0.98); }
+.state-btn.struggling { border-color: var(--teal-border); }
+.state-btn.struggling:hover, .state-btn.struggling:active { background: var(--teal-bg); }
+.state-btn.distracted { border-color: var(--amber-border); }
+.state-btn.distracted:hover, .state-btn.distracted:active { background: var(--amber-bg); }
+.state-btn.checkin { border-color: var(--blue-border); }
+.state-btn.checkin:hover, .state-btn.checkin:active { background: var(--blue-bg); }
+
+.state-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.struggling .state-icon { background: var(--teal-bg); }
+.distracted .state-icon { background: var(--amber-bg); }
+.checkin .state-icon { background: var(--blue-bg); }
+
+.state-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.2;
+}
+.state-desc {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg3);
+  border: 0.5px solid var(--border);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 32px;
+}
+.phase-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+
+.rescue-header {
+  padding: 56px 24px 24px;
+  flex-shrink: 0;
+}
+.back-btn {
+  background: var(--bg3);
+  border: 0.5px solid var(--border);
+  border-radius: 99px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.rescue-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--text);
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+.rescue-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+.sub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 24px;
+  margin-bottom: 20px;
+}
+
+.sub-btn {
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 14px 12px;
+  background: var(--bg2);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.sub-btn:active { transform: scale(0.97); }
+.sub-btn.selected { border-color: var(--teal-border); background: var(--teal-bg); }
+.sub-btn-icon { font-size: 18px; margin-bottom: 6px; display: block; }
+.sub-btn-label { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.sub-btn-desc { font-size: 11px; color: var(--text2); margin-top: 2px; line-height: 1.3; }
+
+.rescue-card {
+  margin: 0 24px 16px;
+  background: var(--bg2);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 20px;
+  animation: slideUp 0.3s ease;
+}
+
+.rescue-validation {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  font-style: italic;
+}
+
+.rescue-action {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.rescue-action-label {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.divider { height: 0.5px; background: var(--border); margin: 14px 0; }
+
+.shrinker-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.shrink-option {
+  flex: 1;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 6px;
+  background: var(--bg3);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.shrink-option:active { transform: scale(0.97); }
+.shrink-option.selected { border-color: var(--purple-border); background: var(--purple-bg); }
+.shrink-label { font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 3px; }
+.shrink-text { font-size: 11px; color: var(--text2); line-height: 1.3; }
+.shrink-option.selected .shrink-text { color: var(--text); }
+
+.start-btn {
+  width: 100%;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 24px;
+  width: calc(100% - 48px);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.start-btn:active { transform: scale(0.98); background: var(--teal2); }
+.start-btn.amber { background: var(--amber); }
+.start-btn.amber:active { background: #c4872a; }
+.start-btn.blue { background: var(--blue); }
+.start-btn.loading { animation: shimmer 1.5s infinite; }
+
+.emergency-btn {
+  margin: 16px 24px 0;
+  width: calc(100% - 48px);
+  background: transparent;
+  border: 0.5px solid var(--red-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  font-size: 13px;
+  color: var(--red);
+  font-family: var(--font);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.emergency-btn:active { background: var(--red-bg); }
+
+.timer-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  flex: 1;
+}
+
+.timer-label {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.timer-task {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 40px;
+  line-height: 1.4;
+  max-width: 260px;
+}
+
+.timer-circle {
+  width: 180px;
+  height: 180px;
+  position: relative;
+  margin-bottom: 40px;
+}
+
+.timer-svg { width: 180px; height: 180px; transform: rotate(-90deg); }
+.timer-track { fill: none; stroke: var(--bg3); stroke-width: 4; }
+.timer-progress { fill: none; stroke: var(--teal); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+
+.timer-count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-serif);
+  font-size: 42px;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.timer-done-btn {
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 18px 40px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.timer-done-btn:active { transform: scale(0.97); }
+
+.timer-skip {
+  margin-top: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  padding: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.proof-screen-inner {
+  padding: 56px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.proof-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+.proof-type-badge.regular { background: var(--teal-bg); color: var(--teal); border: 0.5px solid var(--teal-border); }
+.proof-type-badge.hard-day { background: var(--purple-bg); color: var(--purple); border: 0.5px solid var(--purple-border); }
+.proof-type-badge.recovery { background: var(--amber-bg); color: var(--amber); border: 0.5px solid var(--amber-border); }
+
+.proof-big {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  line-height: 1.25;
+  color: var(--text);
+  margin-bottom: 10px;
+  font-weight: 400;
+}
+
+.proof-identity {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 28px;
+  font-style: italic;
+}
+
+.rescue-rate-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.rr-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+.rr-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.rr-pct { font-size: 24px; font-weight: 500; color: var(--teal); }
+.rr-sub { font-size: 11px; color: var(--text3); }
+.rr-bar-track { height: 4px; background: var(--bg3); border-radius: 2px; }
+.rr-bar-fill { height: 4px; border-radius: 2px; background: var(--teal); transition: width 0.8s ease; }
+
+.proof-wall-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+.pw-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+.proof-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 0.5px solid var(--border);
+}
+.proof-item:first-of-type { border-top: none; padding-top: 0; }
+.proof-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.proof-dot.regular { background: var(--teal); }
+.proof-dot.hard-day { background: var(--purple); }
+.proof-dot.recovery { background: var(--amber); }
+.proof-item-text { font-size: 12px; color: var(--text2); line-height: 1.4; }
+.proof-item-date { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.proof-empty { font-size: 12px; color: var(--text3); text-align: center; padding: 12px 0; font-style: italic; }
+
+.next-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+.next-btn {
+  flex: 1;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 14px 10px;
+  background: var(--bg2);
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  font-family: var(--font);
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.next-btn:active { background: var(--bg3); }
+.next-btn.primary { border-color: var(--teal-border); color: var(--teal); }
+
+.forgiveness-card {
+  margin: 0 24px 16px;
+  background: var(--amber-bg);
+  border: 0.5px solid var(--amber-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  animation: slideUp 0.4s ease;
+}
+.forgiveness-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+.forgiveness-title { font-family: var(--font-serif); font-size: 20px; color: var(--text); margin-bottom: 8px; font-weight: 400; }
+.forgiveness-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+.emergency-steps {
+  margin: 0 24px;
+  background: var(--bg2);
+  border: 0.5px solid var(--red-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  animation: slideUp 0.3s ease;
+}
+.emergency-title { font-family: var(--font-serif); font-size: 20px; color: var(--text); margin-bottom: 16px; font-weight: 400; }
+.emergency-step-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--border);
+}
+.emergency-step-item:first-of-type { border-top: none; padding-top: 0; }
+.emergency-step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.emergency-step-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+.checkin-content { padding: 0 24px; }
+.checkin-section { margin-bottom: 20px; }
+.checkin-section-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+.big1-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 15px;
+  color: var(--text);
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.big1-input:focus { border-color: var(--blue-border); }
+.big1-input::placeholder { color: var(--text3); }
+
+.delay-timer-card {
+  margin: 0 24px;
+  background: var(--amber-bg);
+  border: 0.5px solid var(--amber-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+.delay-title { font-family: var(--font-serif); font-size: 22px; color: var(--text); margin-bottom: 8px; font-weight: 400; }
+.delay-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.5; }
+.delay-count { font-family: var(--font-serif); font-size: 56px; color: var(--amber); margin-bottom: 8px; line-height: 1; }
+.delay-unit { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 24px; }
+.delay-after-btns { display: flex; gap: 8px; }
+.delay-after-btn {
+  flex: 1;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 12px 8px;
+  background: var(--bg2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  font-family: var(--font);
+  transition: all 0.2s;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.delay-after-btn.good { border-color: var(--teal-border); color: var(--teal); }
+.delay-after-btn:active { transform: scale(0.97); }
+
+.profile-question {
+  margin: 16px 24px;
+  background: var(--bg2);
+  border: 0.5px solid var(--purple-border);
+  border-radius: var(--radius);
+  padding: 18px;
+  animation: slideUp 0.4s ease;
+}
+.pq-label { font-size: 10px; color: var(--purple); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.pq-question { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 12px; line-height: 1.4; }
+.pq-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: var(--font);
+  outline: none;
+  margin-bottom: 10px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.pq-save {
+  background: var(--purple-bg);
+  border: 0.5px solid var(--purple-border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--purple);
+  font-family: var(--font);
+  cursor: pointer;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.night-shift-banner {
+  margin: 0 24px 12px;
+  background: var(--teal-bg);
+  border: 0.5px solid var(--teal-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--teal);
+  line-height: 1.4;
+}
+
+.mood-row { display: flex; gap: 6px; margin-bottom: 12px; }
+.mood-btn {
+  flex: 1;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 4px;
+  background: var(--bg3);
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--text2);
+  transition: all 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.mood-btn.selected { border-color: var(--blue-border); background: var(--blue-bg); color: var(--blue); }
+.mood-emoji { display: block; font-size: 18px; margin-bottom: 3px; }
+.mood-label { display: block; font-size: 10px; }
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1: STATE -->
+<div class="screen active" id="screen-state">
+  <div class="header">
+    <div class="logo">Threshold</div>
+  </div>
+  <div class="content">
+    <div id="phase-pill" class="phase-pill" style="display:none">
+      <span class="phase-dot"></span>
+      <span id="phase-text">Phase 1 · Day 1</span>
+    </div>
+    <div class="big-question">What's happening<br>right now?</div>
+    <div class="big-sub">No dashboard. No shame.<br>Just the next step.</div>
+    <button class="state-btn struggling" onclick="goStruggling()">
+      <div class="state-icon">🌊</div>
+      <div>
+        <div class="state-label">I'm struggling</div>
+        <div class="state-desc">Tired, overwhelmed, ashamed, or lost</div>
+      </div>
+    </button>
+    <button class="state-btn distracted" onclick="goDistracted()">
+      <div class="state-icon">📱</div>
+      <div>
+        <div class="state-label">I'm distracted</div>
+        <div class="state-desc">About to scroll, game, or escape</div>
+      </div>
+    </button>
+    <button class="state-btn checkin" onclick="goCheckin()">
+      <div class="state-icon">✦</div>
+      <div>
+        <div class="state-label">Just checking in</div>
+        <div class="state-desc">I'm okay — what's next for me</div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN 2A: STRUGGLING -->
+<div class="screen" id="screen-struggling">
+  <div class="rescue-header">
+    <button class="back-btn" onclick="showState()">← Back</button>
+    <div class="rescue-title" id="struggling-title">What kind of struggle?</div>
+    <div class="rescue-sub">Be honest. No judgement here.</div>
+  </div>
+  <div class="sub-grid" id="struggling-grid">
+    <button class="sub-btn" onclick="selectStruggle('tired')">
+      <span class="sub-btn-icon">😴</span>
+      <div class="sub-btn-label">Tired</div>
+      <div class="sub-btn-desc">Low energy, drained</div>
+    </button>
+    <button class="sub-btn" onclick="selectStruggle('overwhelmed')">
+      <span class="sub-btn-icon">🌀</span>
+      <div class="sub-btn-label">Overwhelmed</div>
+      <div class="sub-btn-desc">Too much, can't start</div>
+    </button>
+    <button class="sub-btn" onclick="selectStruggle('ashamed')">
+      <span class="sub-btn-icon">😔</span>
+      <div class="sub-btn-label">Ashamed</div>
+      <div class="sub-btn-desc">Already failed today</div>
+    </button>
+    <button class="sub-btn" onclick="selectStruggle('anxious')">
+      <span class="sub-btn-icon">💭</span>
+      <div class="sub-btn-label">Anxious</div>
+      <div class="sub-btn-desc">Worried, can't focus</div>
+    </button>
+    <button class="sub-btn" onclick="selectStruggle('lost')">
+      <span class="sub-btn-icon">🧭</span>
+      <div class="sub-btn-label">Lost</div>
+      <div class="sub-btn-desc">Don't know where to start</div>
+    </button>
+    <button class="sub-btn" onclick="selectStruggle('failed')">
+      <span class="sub-btn-icon">💔</span>
+      <div class="sub-btn-label">Already failed</div>
+      <div class="sub-btn-desc">Missed days, broke streak</div>
+    </button>
+  </div>
+  <div id="rescue-card-area"></div>
+  <button class="emergency-btn" onclick="showEmergency()">I feel like quitting entirely</button>
+</div>
+
+<!-- SCREEN 2B: DISTRACTED -->
+<div class="screen" id="screen-distracted">
+  <div class="rescue-header">
+    <button class="back-btn" onclick="showState()">← Back</button>
+    <div class="rescue-title">What are you about<br>to escape into?</div>
+    <div class="rescue-sub">Name it. Then we delay it.</div>
+  </div>
+  <div class="sub-grid">
+    <button class="sub-btn" onclick="selectDistraction('scrolling')">
+      <span class="sub-btn-icon">📲</span>
+      <div class="sub-btn-label">Scrolling</div>
+      <div class="sub-btn-desc">TikTok, Reels, Twitter</div>
+    </button>
+    <button class="sub-btn" onclick="selectDistraction('gaming')">
+      <span class="sub-btn-icon">🎮</span>
+      <div class="sub-btn-label">Gaming</div>
+      <div class="sub-btn-desc">PS5, phone games</div>
+    </button>
+    <button class="sub-btn" onclick="selectDistraction('youtube')">
+      <span class="sub-btn-icon">▶️</span>
+      <div class="sub-btn-label">YouTube</div>
+      <div class="sub-btn-desc">Random videos</div>
+    </button>
+    <button class="sub-btn" onclick="selectDistraction('netflix')">
+      <span class="sub-btn-icon">🎬</span>
+      <div class="sub-btn-label">Netflix</div>
+      <div class="sub-btn-desc">Shows, movies</div>
+    </button>
+    <button class="sub-btn" onclick="selectDistraction('food')">
+      <span class="sub-btn-icon">🍔</span>
+      <div class="sub-btn-label">Food</div>
+      <div class="sub-btn-desc">Eating when not hungry</div>
+    </button>
+    <button class="sub-btn" onclick="selectDistraction('other')">
+      <span class="sub-btn-icon">💨</span>
+      <div class="sub-btn-label">Other</div>
+      <div class="sub-btn-desc">Something else</div>
+    </button>
+  </div>
+  <div id="delay-area"></div>
+</div>
+
+<!-- SCREEN 2C: CHECK IN -->
+<div class="screen" id="screen-checkin">
+  <div class="rescue-header">
+    <button class="back-btn" onclick="showState()">← Back</button>
+    <div class="rescue-title">Good. You're here.</div>
+    <div class="rescue-sub">Let's make today count.</div>
+  </div>
+  <div class="checkin-content">
+    <div id="nightshift-banner"></div>
+    <div class="checkin-section">
+      <div class="checkin-section-label">Today's Big 1</div>
+      <input class="big1-input" id="big1-input" placeholder="The one thing that matters most today..." oninput="saveBig1()">
+    </div>
+    <div class="checkin-section">
+      <div class="checkin-section-label">Energy check</div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="selectMood(1)"><span class="mood-emoji">😴</span><span class="mood-label">Drained</span></button>
+        <button class="mood-btn" onclick="selectMood(2)"><span class="mood-emoji">😐</span><span class="mood-label">Low</span></button>
+        <button class="mood-btn" onclick="selectMood(3)"><span class="mood-emoji">🙂</span><span class="mood-label">Okay</span></button>
+        <button class="mood-btn" onclick="selectMood(4)"><span class="mood-emoji">😊</span><span class="mood-label">Good</span></button>
+        <button class="mood-btn" onclick="selectMood(5)"><span class="mood-emoji">⚡</span><span class="mood-label">Sharp</span></button>
+      </div>
+    </div>
+    <div class="checkin-section">
+      <div class="checkin-section-label">Start focus now</div>
+      <div class="sub-grid" style="padding:0;margin-bottom:0">
+        <button class="sub-btn" onclick="startFocus(5,'Just start — 5 minutes')">
+          <span class="sub-btn-icon">⚡</span>
+          <div class="sub-btn-label">5 min start</div>
+          <div class="sub-btn-desc">When you have zero motivation</div>
+        </button>
+        <button class="sub-btn" onclick="startFocus(25,'Deep focus — 25 minutes')">
+          <span class="sub-btn-icon">🍅</span>
+          <div class="sub-btn-label">25 min focus</div>
+          <div class="sub-btn-desc">Pomodoro — proven method</div>
+        </button>
+        <button class="sub-btn" onclick="startFocus(50,'Deep work — 50 minutes')">
+          <span class="sub-btn-icon">🔥</span>
+          <div class="sub-btn-label">50 min deep</div>
+          <div class="sub-btn-desc">When you're in the zone</div>
+        </button>
+        <button class="sub-btn" onclick="startFocus(90,'Machine mode — 90 minutes')">
+          <span class="sub-btn-icon">💎</span>
+          <div class="sub-btn-label">90 min machine</div>
+          <div class="sub-btn-desc">Full locked-in session</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: TIMER -->
+<div class="screen" id="screen-timer">
+  <div class="timer-screen">
+    <div class="timer-label" id="timer-mode-label">FOCUS SESSION</div>
+    <div class="timer-task" id="timer-task-display">Working...</div>
+    <div class="timer-circle">
+      <svg class="timer-svg" viewBox="0 0 180 180">
+        <circle class="timer-track" cx="90" cy="90" r="82"/>
+        <circle class="timer-progress" id="timer-ring" cx="90" cy="90" r="82" stroke-dasharray="515" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-count" id="timer-display">00:00</div>
+    </div>
+    <button class="timer-done-btn" onclick="timerDone()" id="timer-done-btn">Done — record proof</button>
+    <button class="timer-skip" onclick="timerDone()">Skip timer — mark complete anyway</button>
+  </div>
+</div>
+
+<!-- SCREEN 4: PROOF -->
+<div class="screen" id="screen-proof">
+  <div class="proof-screen-inner">
+    <div id="proof-type-badge"></div>
+    <div class="proof-big" id="proof-big-text">Proof recorded.</div>
+    <div class="proof-identity" id="proof-identity-text">You took action.</div>
+    <div class="rescue-rate-card">
+      <div class="rr-label">Rescue rate</div>
+      <div class="rr-row">
+        <div class="rr-pct" id="rr-pct">—</div>
+        <div class="rr-sub" id="rr-sub">rescues this week</div>
+      </div>
+      <div class="rr-bar-track"><div class="rr-bar-fill" id="rr-bar" style="width:0%"></div></div>
+    </div>
+    <div class="proof-wall-card">
+      <div class="pw-label">Proof wall</div>
+      <div id="proof-wall-list"></div>
+    </div>
+    <div id="profile-question-area"></div>
+    <div class="next-actions">
+      <button class="next-btn" onclick="showState()">New rescue</button>
+      <button class="next-btn primary" onclick="showState()">Done for now</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMERGENCY OVERLAY -->
+<div class="screen" id="screen-emergency">
+  <div class="rescue-header">
+    <button class="back-btn" onclick="showState()">← Back</button>
+    <div class="rescue-title">You don't have to<br>solve everything.</div>
+    <div class="rescue-sub">Just five tiny steps. That's today saved.</div>
+  </div>
+  <div class="emergency-steps">
+    <div class="emergency-title">Emergency mode</div>
+    <div class="emergency-step-item">
+      <div class="emergency-step-num">1</div>
+      <div class="emergency-step-text">Stand up from where you are right now</div>
+    </div>
+    <div class="emergency-step-item">
+      <div class="emergency-step-num">2</div>
+      <div class="emergency-step-text">Drink a full glass of water</div>
+    </div>
+    <div class="emergency-step-item">
+      <div class="emergency-step-num">3</div>
+      <div class="emergency-step-text">Breathe in for 4 seconds, hold 4, out for 6. Three times.</div>
+    </div>
+    <div class="emergency-step-item">
+      <div class="emergency-step-num">4</div>
+      <div class="emergency-step-text" id="emergency-min-action">Do one tiny thing — even 2 minutes counts</div>
+    </div>
+    <div class="emergency-step-item">
+      <div class="emergency-step-num">5</div>
+      <div class="emergency-step-text">Mark today as saved. You came back.</div>
+    </div>
+  </div>
+  <div style="height:16px"></div>
+  <button class="start-btn" onclick="emergencyComplete()" style="margin:0 24px;width:calc(100% - 48px)">Day saved — record proof</button>
+</div>
+
+<script>
+const DATA_KEY = 'threshold_v1';
+let state = loadData();
+let timerInterval = null;
+let timerSeconds = 0;
+let timerTotal = 0;
+let delayInterval = null;
+let currentSubState = '';
+let currentRescueAction = '';
+let currentProofType = 'regular';
+let aiLoading = false;
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(DATA_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    rescueStarts: 0,
+    rescueCompletes: 0,
+    proofWall: [],
+    profile: {},
+    rescueCount: 0,
+    phaseStart: Date.now(),
+    big1: '',
+    lastSeen: null,
+    weeklyStarts: 0,
+    weeklyCompletes: 0,
+    weekStart: getWeekStart()
+  };
+}
+
+function saveData() {
+  try { localStorage.setItem(DATA_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function getWeekStart() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d.setDate(diff));
+  monday.setHours(0,0,0,0);
+  return monday.getTime();
+}
+
+function checkWeekReset() {
+  const current = getWeekStart();
+  if (state.weekStart !== current) {
+    state.weekStart = current;
+    state.weeklyStarts = 0;
+    state.weeklyCompletes = 0;
+    saveData();
+  }
+}
+
+function getDaysSinceLastSeen() {
+  if (!state.lastSeen) return 0;
+  const diff = Date.now() - state.lastSeen;
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function getPhaseDay() {
+  const diff = Date.now() - state.phaseStart;
+  return Math.min(Math.floor(diff / (1000 * 60 * 60 * 24)) + 1, 63);
+}
+
+function getPhase() {
+  const day = getPhaseDay();
+  if (day <= 21) return { num: 1, name: 'Seed', color: '#1db88a' };
+  if (day <= 42) return { num: 2, name: 'Grow', color: '#8b7cf8' };
+  return { num: 3, name: 'Machine', color: '#e8a030' };
+}
+
+function isNightShiftTime() {
+  const h = new Date().getHours();
+  return h >= 7 && h <= 9;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showState() {
+  checkWeekReset();
+  state.lastSeen = Date.now();
+  saveData();
+  const days = getDaysSinceLastSeen();
+  updateStatePill();
+  if (days >= 3) showForgiveness();
+  else showScreen('screen-state');
+}
+
+function showForgiveness() {
+  showScreen('screen-state');
+  const days = getDaysSinceLastSeen() || 0;
+  const savedDays = Math.floor((Date.now() - (state.lastSeen || Date.now())) / 86400000);
+  const card = document.createElement('div');
+  card.className = 'forgiveness-card';
+  card.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100;margin:16px;';
+  card.innerHTML = `
+    <span class="forgiveness-icon">🌅</span>
+    <div class="forgiveness-title">You're back.</div>
+    <div class="forgiveness-body">You were away for a few days. That's human. Everything before still counts. Your proof wall is intact. Let's save today with one small action.</div>
+    <button onclick="this.parentElement.remove()" style="margin-top:14px;background:var(--amber-bg);border:0.5px solid var(--amber-border);border-radius:8px;padding:10px;font-size:13px;color:var(--amber);width:100%;font-family:var(--font);cursor:pointer;">I'm back — let's go</button>
+  `;
+  document.body.appendChild(card);
+}
+
+function updateStatePill() {
+  const pill = document.getElementById('phase-pill');
+  const phase = getPhase();
+  const day = getPhaseDay();
+  document.getElementById('phase-text').textContent = `Phase ${phase.num} · Day ${day}`;
+  pill.style.display = 'inline-flex';
+  if (isNightShiftTime()) {
+    const banner = document.createElement('div');
+    banner.className = 'night-shift-banner';
+    banner.style.cssText = 'margin:0 24px 16px;';
+    banner.textContent = '🌙 Night shift recovery mode — protect your sleep first.';
+    const content = document.querySelector('#screen-state .content');
+    if (!content.querySelector('.night-shift-banner')) content.prepend(banner);
+  }
+}
+
+function goStruggling() {
+  state.rescueStarts++;
+  state.weeklyStarts++;
+  checkWeekReset();
+  saveData();
+  document.getElementById('rescue-card-area').innerHTML = '';
+  showScreen('screen-struggling');
+}
+
+function goDistracted() {
+  state.rescueStarts++;
+  state.weeklyStarts++;
+  saveData();
+  document.getElementById('delay-area').innerHTML = '';
+  showScreen('screen-distracted');
+}
+
+function goCheckin() {
+  showScreen('screen-checkin');
+  const big1 = document.getElementById('big1-input');
+  if (state.big1) big1.value = state.big1;
+  const banner = document.getElementById('nightshift-banner');
+  if (isNightShiftTime()) {
+    banner.innerHTML = '<div class="night-shift-banner">🌙 After-shift mode: water → light food → phone outside room → sleep. Protect recovery.</div>';
+  }
+}
+
+const RESCUE_RESPONSES = {
+  tired: { validation: "You're tired, not broken. Tiredness is your body asking for care, not proof that you've failed.", action: "Drink a full glass of water. Sit upright. That's the whole job for now.", timer: 60, proof: "You rested and returned. That's the discipline." },
+  overwhelmed: { validation: "Overwhelm means your brain is trying to solve everything at once. We're not doing that.", action: "Open the one thing you've been avoiding. Don't work yet. Just open it.", timer: 120, proof: "You faced the thing you were avoiding. That's courage." },
+  ashamed: { validation: "You came back. That's already the hardest part. Shame fades — proof lasts.", action: "Do the smallest version of one thing you care about. Even 2 minutes counts.", timer: 120, proof: "You returned after shame. That's exactly who you're becoming." },
+  anxious: { validation: "Anxiety is energy without direction. Let's give it one tiny direction.", action: "Breathe in 4, hold 4, out 6. Three times. Then write one sentence about what you're worried about.", timer: 60, proof: "You didn't run from anxiety. You moved through it." },
+  lost: { validation: "Lost just means you need one clear next step. Nothing more.", action: "Write down the ONE thing that would make today feel worthwhile. Just write it — don't do it yet.", timer: 120, proof: "You found your direction. That's the whole skill." },
+  failed: { validation: "Missing days is not failure. Staying gone is. You're back — that's the only thing that matters.", action: "Do your minimum action. The one thing you can always do, even on the worst day.", timer: 120, proof: "You came back after missing days. This is what consistency actually looks like." }
+};
+
+async function selectStruggle(type) {
+  currentSubState = type;
+  document.querySelectorAll('#struggling-grid .sub-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('struggling-title').textContent = 'Here\'s your rescue.';
+
+  const isHardDay = ['ashamed', 'failed', 'tired'].includes(type);
+  const isMissed = type === 'failed';
+  currentProofType = isMissed ? 'recovery' : isHardDay ? 'hard-day' : 'regular';
+
+  const local = RESCUE_RESPONSES[type];
+  showRescueCard(local, type);
+
+  if (state.rescueCount >= 0) {
+    fetchAIRescue(type, local);
+  }
+}
+
+function showRescueCard(resp, type) {
+  currentRescueAction = resp.action;
+  const minAction = state.profile.minAction || 'drink water and sit up straight';
+
+  const shrinkerHTML = `
+    <div class="shrinker-row" id="shrinker-row">
+      <button class="shrink-option selected" onclick="selectShrink('full','${escHtml(resp.action)}')" id="shrink-full">
+        <span class="shrink-label">Full</span>
+        <span class="shrink-text">${escHtml(resp.action)}</span>
+      </button>
+      <button class="shrink-option" onclick="selectShrink('min','${escHtml(minAction)}')" id="shrink-min">
+        <span class="shrink-label">Minimum</span>
+        <span class="shrink-text">${escHtml(minAction)}</span>
+      </button>
+    </div>`;
+
+  document.getElementById('rescue-card-area').innerHTML = `
+    <div class="rescue-card">
+      <div class="rescue-validation">"${escHtml(resp.validation)}"</div>
+      <div class="divider"></div>
+      <div class="rescue-action-label">Your next action</div>
+      <div class="rescue-action" id="rescue-action-text">${escHtml(resp.action)}</div>
+      ${shrinkerHTML}
+    </div>
+    <button class="start-btn ${currentProofType === 'hard-day' ? '' : ''}" onclick="startRescueTimer(${resp.timer})" id="rescue-start-btn">
+      Start ${resp.timer < 120 ? '60 seconds' : '2 minutes'}
+    </button>`;
+}
+
+function selectShrink(type, action) {
+  currentRescueAction = action;
+  document.querySelectorAll('.shrink-option').forEach(b => b.classList.remove('selected'));
+  document.getElementById('shrink-' + type).classList.add('selected');
+  document.getElementById('rescue-action-text').textContent = action;
+}
+
+async function fetchAIRescue(type, fallback) {
+  if (aiLoading) return;
+  aiLoading = true;
+  try {
+    const resp = await fetch('/api/rescue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: 'struggling',
+        subState: type,
+        hour: new Date().getHours(),
+        missedDays: getDaysSinceLastSeen(),
+        minAction: state.profile.minAction || '',
+        rescueCount: state.rescueCount
+      })
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.validation && data.action) {
+        const card = document.getElementById('rescue-card-area');
+        if (card) {
+          const valEl = card.querySelector('.rescue-validation');
+          const actEl = card.querySelector('#rescue-action-text');
+          const shrinkFull = card.querySelector('#shrink-full .shrink-text');
+          if (valEl) valEl.textContent = '"' + data.validation + '"';
+          if (actEl) { actEl.textContent = data.action; currentRescueAction = data.action; }
+          if (shrinkFull) shrinkFull.textContent = data.action;
+        }
+      }
+    }
+  } catch(e) {}
+  aiLoading = false;
+}
+
+function selectDistraction(type) {
+  state.profile.primaryDistraction = type;
+  saveData();
+  startDelayTimer(type);
+}
+
+function startDelayTimer(type) {
+  let secs = 600;
+  document.getElementById('delay-area').innerHTML = `
+    <div class="delay-timer-card">
+      <div class="delay-title">Wait 10 minutes.</div>
+      <div class="delay-sub">You can still do it after. No shame. But delay first — most cravings pass in under 10 minutes.</div>
+      <div class="delay-count" id="delay-count">10</div>
+      <div class="delay-unit">minutes remaining</div>
+      <div id="delay-after-btns-area" style="display:none" class="delay-after-btns">
+        <button class="delay-after-btn good" onclick="delayGood()">I don't need it ✓</button>
+        <button class="delay-after-btn" onclick="delayStillWant()">Still want it</button>
+      </div>
+    </div>`;
+  if (delayInterval) clearInterval(delayInterval);
+  delayInterval = setInterval(() => {
+    secs--;
+    const mins = Math.floor(secs / 60);
+    const el = document.getElementById('delay-count');
+    if (el) el.textContent = mins < 1 ? Math.max(0, secs) + 's' : mins;
+    if (secs <= 0) {
+      clearInterval(delayInterval);
+      const el2 = document.getElementById('delay-after-btns-area');
+      if (el2) el2.style.display = 'flex';
+      const countEl = document.getElementById('delay-count');
+      if (countEl) { countEl.textContent = '0'; countEl.style.color = 'var(--teal)'; }
+    }
+  }, 1000);
+}
+
+function delayGood() {
+  if (delayInterval) clearInterval(delayInterval);
+  state.rescueCompletes++;
+  state.weeklyCompletes++;
+  saveData();
+  showProof('distraction-resisted', 'Distraction resisted.', 'You chose differently. That\'s the muscle getting stronger.');
+}
+
+function delayStillWant() {
+  if (delayInterval) clearInterval(delayInterval);
+  showState();
+}
+
+function startRescueTimer(seconds) {
+  const task = currentRescueAction || 'Complete the action';
+  const label = seconds <= 60 ? '60 SEC RESCUE' : seconds <= 120 ? '2 MIN RESCUE' : 'FOCUS SESSION';
+  startTimer(seconds, task, label);
+}
+
+function startFocus(mins, label) {
+  const task = document.getElementById('big1-input').value || 'Focus session';
+  startTimer(mins * 60, task, label.toUpperCase());
+}
+
+function startTimer(secs, task, label) {
+  timerTotal = secs;
+  timerSeconds = secs;
+  document.getElementById('timer-mode-label').textContent = label;
+  document.getElementById('timer-task-display').textContent = task.length > 60 ? task.substring(0,60)+'...' : task;
+  updateTimerDisplay();
+  showScreen('screen-timer');
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerDone();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  document.getElementById('timer-display').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const progress = timerTotal > 0 ? (timerTotal - timerSeconds) / timerTotal : 1;
+  const circumference = 515;
+  const offset = circumference - (progress * circumference);
+  const ring = document.getElementById('timer-ring');
+  if (ring) ring.style.strokeDashoffset = offset;
+}
+
+function timerDone() {
+  if (timerInterval) clearInterval(timerInterval);
+  state.rescueCompletes++;
+  state.weeklyCompletes++;
+  state.rescueCount++;
+  saveData();
+  const proofText = RESCUE_RESPONSES[currentSubState]?.proof || 'You did the work. That\'s proof.';
+  showProof(currentProofType, getProofTitle(currentProofType), proofText);
+}
+
+function getProofTitle(type) {
+  if (type === 'hard-day') return 'Hard-day proof.';
+  if (type === 'recovery') return 'Recovery proof.';
+  if (type === 'distraction-resisted') return 'Distraction resisted.';
+  return 'Proof recorded.';
+}
+
+function showProof(type, title, identity) {
+  currentProofType = type;
+  const badgeEl = document.getElementById('proof-type-badge');
+  const badges = {
+    'regular': ['✦ Regular proof', 'regular'],
+    'hard-day': ['★ Hard-day proof — counts more', 'hard-day'],
+    'recovery': ['↩ Recovery proof', 'recovery'],
+    'distraction-resisted': ['⊘ Distraction resisted', 'regular']
+  };
+  const [label, cls] = badges[type] || badges.regular;
+  badgeEl.innerHTML = `<div class="proof-type-badge ${cls}">${label}</div>`;
+  document.getElementById('proof-big-text').textContent = title;
+  document.getElementById('proof-identity-text').textContent = identity;
+
+  addToProofWall(type, title);
+  updateRescueRate();
+  renderProofWall();
+  showProfileQuestion();
+  showScreen('screen-proof');
+}
+
+function addToProofWall(type, text) {
+  const entry = {
+    type,
+    text,
+    date: new Date().toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' }),
+    ts: Date.now()
+  };
+  state.proofWall.unshift(entry);
+  if (state.proofWall.length > 30) state.proofWall = state.proofWall.slice(0, 30);
+  saveData();
+}
+
+function updateRescueRate() {
+  const starts = state.weeklyStarts || 1;
+  const completes = state.weeklyCompletes || 0;
+  const rate = Math.round((completes / starts) * 100);
+  document.getElementById('rr-pct').textContent = rate + '%';
+  document.getElementById('rr-sub').textContent = `${completes} of ${starts} this week`;
+  setTimeout(() => {
+    const bar = document.getElementById('rr-bar');
+    if (bar) bar.style.width = rate + '%';
+  }, 100);
+}
+
+function renderProofWall() {
+  const list = document.getElementById('proof-wall-list');
+  if (!state.proofWall.length) {
+    list.innerHTML = '<div class="proof-empty">Your proof wall is empty. Every action adds a card here.</div>';
+    return;
+  }
+  list.innerHTML = state.proofWall.slice(0, 7).map(p => `
+    <div class="proof-item">
+      <div class="proof-dot ${p.type === 'hard-day' ? 'hard-day' : p.type === 'recovery' ? 'recovery' : 'regular'}"></div>
+      <div>
+        <div class="proof-item-text">${escHtml(p.text)}</div>
+        <div class="proof-item-date">${p.date}</div>
+      </div>
+    </div>`).join('');
+}
+
+function showProfileQuestion() {
+  const count = state.rescueCount;
+  const area = document.getElementById('profile-question-area');
+  area.innerHTML = '';
+  if (count === 1 && !state.profile.breakQuestion) {
+    area.innerHTML = `
+      <div class="profile-question">
+        <div class="pq-label">Help us understand you</div>
+        <div class="pq-question">What broke you today?</div>
+        <input class="pq-input" id="pq-input" placeholder="Be honest — this shapes your rescue system..." maxlength="200">
+        <button class="pq-save" onclick="saveProfileAnswer('breakQuestion')">Save →</button>
+      </div>`;
+  } else if (count === 7 && !state.profile.minAction) {
+    area.innerHTML = `
+      <div class="profile-question">
+        <div class="pq-label">Your emergency floor</div>
+        <div class="pq-question">What tiny action can you always do, even on your worst day?</div>
+        <input class="pq-input" id="pq-input" placeholder="e.g. drink water, 5 push-ups, open the document..." maxlength="100">
+        <button class="pq-save" onclick="saveProfileAnswer('minAction')">Set my floor →</button>
+      </div>`;
+    document.getElementById('emergency-min-action').textContent = 'Do your minimum action — the one you just set';
+  } else if (count === 14 && !state.profile.scheduleType) {
+    area.innerHTML = `
+      <div class="profile-question">
+        <div class="pq-label">Your schedule type</div>
+        <div class="pq-question">What best describes your schedule?</div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:10px">
+          ${['Shift worker','Student','9 to 5','Freelancer','Chaotic'].map(s => `<button onclick="selectSchedule('${s}')" style="border:0.5px solid var(--border2);border-radius:8px;padding:10px;background:var(--bg3);color:var(--text2);font-family:var(--font);font-size:12px;cursor:pointer;" class="sub-btn">${s}</button>`).join('')}
+        </div>
+      </div>`;
+  }
+}
+
+function selectSchedule(type) {
+  state.profile.scheduleType = type;
+  saveData();
+  document.getElementById('profile-question-area').innerHTML = `<div style="font-size:12px;color:var(--teal);text-align:center;padding:8px;">Saved: ${type} mode activated ✓</div>`;
+}
+
+function saveProfileAnswer(key) {
+  const val = document.getElementById('pq-input')?.value?.trim();
+  if (!val) return;
+  state.profile[key] = val;
+  saveData();
+  document.getElementById('profile-question-area').innerHTML = `<div style="font-size:12px;color:var(--teal);text-align:center;padding:8px;">Saved ✓</div>`;
+}
+
+function showEmergency() {
+  const minAction = state.profile.minAction;
+  if (minAction) document.getElementById('emergency-min-action').textContent = 'Do your minimum: ' + minAction;
+  showScreen('screen-emergency');
+}
+
+function emergencyComplete() {
+  state.rescueCompletes++;
+  state.weeklyCompletes++;
+  state.rescueCount++;
+  currentProofType = 'recovery';
+  saveData();
+  showProof('recovery', 'Day saved.', 'You were about to quit. You didn\'t. That\'s the whole fight.');
+}
+
+function saveBig1() {
+  state.big1 = document.getElementById('big1-input').value;
+  saveData();
+}
+
+function selectMood(val) {
+  document.querySelectorAll('.mood-btn').forEach((b,i) => {
+    b.classList.toggle('selected', i === val - 1);
+  });
+  state.profile.lastMood = val;
+  saveData();
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+showState();
+</script>
+</body>
+</html>
