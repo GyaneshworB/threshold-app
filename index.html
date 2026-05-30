@@ -932,6 +932,9 @@ let timerTotal = 0;
 let delayInterval = null;
 let currentSubState = '';
 let currentRescueAction = '';
+let currentFullAction = '';
+let currentMinAction = '';
+let currentShrinkMode = 'full';
 let currentProofType = 'regular';
 let aiLoading = false;
 
@@ -1103,39 +1106,42 @@ async function selectStruggle(type) {
 }
 
 function showRescueCard(resp, type) {
-  currentRescueAction = resp.action;
-  const minAction = state.profile.minAction || 'drink water and sit up straight';
-
-  const shrinkerHTML = `
-    <div class="shrinker-row" id="shrinker-row">
-      <button class="shrink-option selected" onclick="selectShrink('full','${escHtml(resp.action)}')" id="shrink-full">
-        <span class="shrink-label">Full</span>
-        <span class="shrink-text">${escHtml(resp.action)}</span>
-      </button>
-      <button class="shrink-option" onclick="selectShrink('min','${escHtml(minAction)}')" id="shrink-min">
-        <span class="shrink-label">Minimum</span>
-        <span class="shrink-text">${escHtml(minAction)}</span>
-      </button>
-    </div>`;
+  currentFullAction = resp.action;
+  currentMinAction = state.profile.minAction || 'Drink water and sit upright for 60 seconds.';
+  currentRescueAction = currentFullAction;
+  currentShrinkMode = 'full';
 
   document.getElementById('rescue-card-area').innerHTML = `
     <div class="rescue-card">
-      <div class="rescue-validation">"${escHtml(resp.validation)}"</div>
+      <div class="rescue-validation" id="rescue-validation-text">"${escHtml(resp.validation)}"</div>
       <div class="divider"></div>
       <div class="rescue-action-label">Your next action</div>
       <div class="rescue-action" id="rescue-action-text">${escHtml(resp.action)}</div>
-      ${shrinkerHTML}
+      <div class="shrinker-row" id="shrinker-row">
+        <button class="shrink-option selected" onclick="selectShrink('full')" id="shrink-full">
+          <span class="shrink-label">Full</span>
+          <span class="shrink-text" id="shrink-full-text">${escHtml(resp.action)}</span>
+        </button>
+        <button class="shrink-option" onclick="selectShrink('min')" id="shrink-min">
+          <span class="shrink-label">Minimum</span>
+          <span class="shrink-text" id="shrink-min-text">${escHtml(currentMinAction)}</span>
+        </button>
+      </div>
     </div>
-    <button class="start-btn ${currentProofType === 'hard-day' ? '' : ''}" onclick="startRescueTimer(${resp.timer})" id="rescue-start-btn">
-      Start ${resp.timer < 120 ? '60 seconds' : '2 minutes'}
+    <button class="start-btn" onclick="startRescueTimer(${resp.timer})" id="rescue-start-btn">
+      Start ${resp.timer <= 60 ? '60 seconds' : '2 minutes'}
     </button>`;
 }
 
-function selectShrink(type, action) {
-  currentRescueAction = action;
+function selectShrink(type) {
+  currentShrinkMode = type;
+  // Always read fresh from global variables — never from DOM text
+  currentRescueAction = type === 'full' ? currentFullAction : currentMinAction;
   document.querySelectorAll('.shrink-option').forEach(b => b.classList.remove('selected'));
-  document.getElementById('shrink-' + type).classList.add('selected');
-  document.getElementById('rescue-action-text').textContent = action;
+  const btn = document.getElementById('shrink-' + type);
+  if (btn) btn.classList.add('selected');
+  const actionEl = document.getElementById('rescue-action-text');
+  if (actionEl) actionEl.textContent = currentRescueAction;
 }
 
 async function fetchAIRescue(type, fallback) {
@@ -1157,15 +1163,16 @@ async function fetchAIRescue(type, fallback) {
     if (resp.ok) {
       const data = await resp.json();
       if (data.validation && data.action) {
-        const card = document.getElementById('rescue-card-area');
-        if (card) {
-          const valEl = card.querySelector('.rescue-validation');
-          const actEl = card.querySelector('#rescue-action-text');
-          const shrinkFull = card.querySelector('#shrink-full .shrink-text');
-          if (valEl) valEl.textContent = '"' + data.validation + '"';
-          if (actEl) { actEl.textContent = data.action; currentRescueAction = data.action; }
-          if (shrinkFull) shrinkFull.textContent = data.action;
-        }
+        // Update globals first — shrinker toggle reads from these, not the DOM
+        currentFullAction = data.action;
+        if (currentShrinkMode === 'full') currentRescueAction = data.action;
+        // Update DOM
+        const valEl = document.getElementById('rescue-validation-text');
+        const actEl = document.getElementById('rescue-action-text');
+        const shrinkFullText = document.getElementById('shrink-full-text');
+        if (valEl) valEl.textContent = '"' + data.validation + '"';
+        if (shrinkFullText) shrinkFullText.textContent = data.action;
+        if (actEl && currentShrinkMode === 'full') actEl.textContent = data.action;
       }
     }
   } catch(e) {}
